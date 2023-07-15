@@ -1,2 +1,19 @@
-@import "~bootstrap/scss/bootstrap"
+@import "~bootstrap/scss/bootstrap";
 
+body {
+    background-color: rgb(240, 238, 234);
+    min-height: 100dvh;
+    min-height: 100vh;
+}
+
+#app {
+    min-height: 100dvh;
+    min-height: 100vh;
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+}
+
+.feedback {
+    display: block !important;
+}

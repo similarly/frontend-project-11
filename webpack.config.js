@@ -12,9 +12,15 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'webpack output',
+      template: './src/index.html',
+      inject: false,
     }),
   ],
+  devServer: {
+    client: {
+      overlay: false,
+    },
+  },
   module: {
     rules: [
       {

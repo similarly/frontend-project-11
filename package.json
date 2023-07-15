@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx webpack --mode development",
-    "build": "npx webpack --mode production"
+    "build": "npx webpack --mode production",
+    "serve": "npx webpack serve"
   },
   "repository": {
     "type": "git",
@@ -19,8 +20,11 @@
   },
   "homepage": "https://github.com/similarly/frontend-project-11#readme",
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.0",
-    "webpack": "^5.88.1"
+    "on-change": "^4.0.2",
+    "webpack": "^5.88.1",
+    "yup": "^1.2.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",

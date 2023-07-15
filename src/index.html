@@ -1,9 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>webpack output</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"><script defer src="main.bundles.js"></script></head>
-  <body>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>RSS Feed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script defer src="main.bundles.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div class="container-md mt-5 ">
+      <h1>RSS агрегатор</h1>
+      <p>Пыщ пыщ попячся</p>
+      <form id="link-form">
+        <label class="form-label " for="rss-link">Ссылка RSS</label>
+        <div class="row">
+          <input type="text" class="form-control col" id="link-form_input" placeholder="https://mysite.ru/feed.rss">
+          <button type="submit" form="link-form" name="link-form" class="btn btn-light col-1 ms-2" id="link-form_button">Go!</button>
+        </div>
+      </form>
+      <p class="form-text">Пример: вставить сюда адрес примера .rss</p>
+    </div>
+  </div>
+</body>
+
 </html>

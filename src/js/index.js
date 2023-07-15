@@ -1,5 +1,6 @@
-import 'bootstrap';
+import bootstrap from 'bootstrap';
 import '../scss/app.scss';
-import './test';
+import app from './app';
 
-document.body.append('test');
+const target = document.getElementById('app');
+app(target);
