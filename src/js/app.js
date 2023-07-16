@@ -2,7 +2,7 @@ import onChange from 'on-change';
 import * as yup from 'yup';
 import render from './view';
 
-export default () => {
+export default (target, lang) => {
   const state = {
     form: {
       inputValue: '',
@@ -14,12 +14,23 @@ export default () => {
     currentFeeds: [],
   };
 
-  const watchedState = onChange(state, (path, value) => {
-    console.log('statechanged');
-    render(watchedState);
+  const watchedState = onChange(state, () => {
+    render(watchedState, lang);
+  });
+
+  // Init validation
+  yup.setLocale({
+    mixed: {
+      required: 'requiredField',
+      notOneOf: 'alreadySubmitted',
+    },
+    string: {
+      url: 'validUrl',
+    },
   });
 
   // Logic
+
   const linkInput = document.querySelector('#link-form_input');
   linkInput.focus();
 
@@ -35,6 +46,8 @@ export default () => {
       .catch((e) => {
         watchedState.form.isLinkValid = false;
         watchedState.form.errors.linkValidity = e.message;
+        console.log(e);
+        // watchedState.form.errors.linkValidity = e.name;
         console.log('[Input] Link is invalid.', watchedState.form.errors);
       });
     return validatedPromise;
