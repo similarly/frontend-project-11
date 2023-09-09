@@ -2,12 +2,17 @@ export default {
   translation: {
     test: 'Проверка!',
     errors: {
-      requiredField: 'Поле не должно быть пустым.',
-      validUrl: 'Текст не является URL.',
-      alreadySubmitted: 'Фид уже добавлен.',
-      proxyError: 'Ошибка прокси.',
+      // Input validation
+      urlValidationError: 'Текст не является URL.',
+      inputEmptyError: 'Поле не должно быть пустым.',
+      // Network
       networkError: 'Ошибка сети.',
+      proxyError: 'Ошибка прокси.',
+      // Document parsing
       parseError: 'Неверный формат данных, ошибка парсинга.',
+      // Other
+      feedAlreadySubmittedError: 'Фид уже добавлен.',
+      undefinedError: 'Неизвестная ошибка',
     },
   },
 };

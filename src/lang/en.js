@@ -2,12 +2,17 @@ export default {
   translation: {
     test: 'Проверка!',
     errors: {
-      requiredField: 'This field is required.',
-      validUrl: 'Text is not URL.',
-      alreadySubmitted: 'RSS feed already submitted.',
-      proxyError: 'Proxy error.',
+      // Input validation
+      urlValidationError: 'Text is not URL.',
+      inputEmptyError: 'This field is required.',
+      // Network
       networkError: 'Network error.',
+      proxyError: 'Proxy error.',
+      // Document parsing
       parseError: 'Wrong data format, couldn\'t parse.',
+      // Other
+      feedAlreadySubmittedError: 'RSS feed already submitted.',
+      undefinedError: 'Неизвестная ошибка',
     },
   },
 };

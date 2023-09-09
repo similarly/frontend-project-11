@@ -17,3 +17,12 @@ body {
 .feedback {
     display: block !important;
 }
+.post-link {
+    width: fit-content;
+}
+.feeds-layout {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 1rem;
+}

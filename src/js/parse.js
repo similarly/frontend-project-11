@@ -1,13 +1,45 @@
-function parse(xmlString) {
+function parseData(data) {
   const parser = new DOMParser();
+  const document = parser.parseFromString(data, 'text/xml');
+  const errorNode = document.querySelector('parsererror');
+  if (errorNode) {
+    const errorMessages = Array.from(errorNode.querySelectorAll('div')).map((divNode) => divNode.textContent).join('\n');
+    const parseError = new Error(errorMessages);
+    parseError.code = 'parseError';
+    throw parseError;
+  }
   try {
-    const document = parser.parseFromString(xmlString, 'text/xml');
-    console.log('[Parse] Succesfuly parsed');
-    return document;
-  } catch (error) {
-    console.log(`[Parse] Parsing error, invalid data: ${error.message}`);
-    throw new Error(error.message, { cause: 'parseError' });
+    const rssElement = document.querySelector('rss');
+    const rssVersion = rssElement.getAttribute('version');
+
+    const channelElement = rssElement.querySelector(':scope > channel');
+
+    const channelTitle = channelElement.querySelector(':scope > title').textContent;
+    const channelLink = channelElement.querySelector(':scope > link').textContent;
+    const channelDescription = channelElement.querySelector(':scope > description').textContent;
+
+    const itemElements = Array.from(channelElement.querySelectorAll(':scope > item'));
+    const items = itemElements.map((item) => ({
+      link: item.querySelector(':scope > link').textContent,
+      title: item.querySelector(':scope > title').textContent,
+      description: item.querySelector(':scope > description').textContent,
+    }));
+
+    const parsedFeed = {
+      rssVersion,
+      feedInfo: {
+        title: channelTitle,
+        link: channelLink,
+        description: channelDescription,
+      },
+      items,
+    };
+    return parsedFeed;
+  } catch (err) {
+    const parseError = new Error(`Data is an XML document but not an RSS feed. ${err.message}`);
+    parseError.code = 'parseError';
+    throw parseError;
   }
 }
 
-export default parse;
+export default parseData;
