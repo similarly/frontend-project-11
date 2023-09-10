@@ -1,3 +1,5 @@
+import { uniqueId } from 'lodash';
+
 function parseData(data) {
   const parser = new DOMParser();
   const document = parser.parseFromString(data, 'text/xml');
@@ -11,6 +13,7 @@ function parseData(data) {
   try {
     const rssElement = document.querySelector('rss');
     const rssVersion = rssElement.getAttribute('version');
+    const feedStateId = uniqueId('feed');
 
     const channelElement = rssElement.querySelector(':scope > channel');
 
@@ -18,23 +21,23 @@ function parseData(data) {
     const channelLink = channelElement.querySelector(':scope > link').textContent;
     const channelDescription = channelElement.querySelector(':scope > description').textContent;
 
-    const itemElements = Array.from(channelElement.querySelectorAll(':scope > item'));
-    const items = itemElements.map((item) => ({
-      link: item.querySelector(':scope > link').textContent,
-      title: item.querySelector(':scope > title').textContent,
-      description: item.querySelector(':scope > description').textContent,
+    const postElements = Array.from(channelElement.querySelectorAll(':scope > item'));
+    const parsedPosts = postElements.map((post) => ({
+      id: uniqueId('post'),
+      parentFeedId: feedStateId,
+      link: post.querySelector(':scope > link').textContent,
+      title: post.querySelector(':scope > title').textContent,
+      description: post.querySelector(':scope > description').textContent,
     }));
 
-    const parsedFeed = {
+    const parsedFeedMeta = {
+      id: feedStateId,
       rssVersion,
-      feedInfo: {
-        title: channelTitle,
-        link: channelLink,
-        description: channelDescription,
-      },
-      items,
+      title: channelTitle,
+      link: channelLink,
+      description: channelDescription,
     };
-    return parsedFeed;
+    return [parsedFeedMeta, parsedPosts];
   } catch (err) {
     const parseError = new Error(`Data is an XML document but not an RSS feed. ${err.message}`);
     parseError.code = 'parseError';

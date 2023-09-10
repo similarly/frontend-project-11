@@ -13,7 +13,15 @@ body {
     justify-content: center;
     align-items: center; */
 }
-
+.post, .feed {
+    box-shadow:inset 0px 0px 0px 2px #bbeca600, 0 1px 3px #00000013;
+    transition: box-shadow .15s ease-in;
+}
+.post.active, .feed.active {
+    box-shadow:inset 0px 0px 0px 2px #bbf3a3, 0 1px 3px #00000013;
+    
+    /* border: solid 3px #a0a0a0; */
+}
 .feedback {
     display: block !important;
 }

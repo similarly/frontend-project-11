@@ -9,7 +9,7 @@ export default (target, lang) => {
   const state = {
     // STATES: input, processing
     formState: 'input',
-    // TODO: change errors
+    // TODO: change way errors
     errors: {
       inputEmptyError: false,
       urlValidationError: false,
@@ -20,9 +20,19 @@ export default (target, lang) => {
       unknownError: false,
     },
     loadedFeeds: [],
+    loadedPosts: [],
     getFeedsUrls() {
       return this.loadedFeeds.map((feed) => feed.url);
     },
+    // loadFeed(feedMeta) {
+    //   this.loadedFeeds.push({
+    //     id: watchedState.loadedFeeds.length + 1,
+    //     ...parsedFeedMeta,
+    //   })
+    // },
+    // loadPosts(posts) {
+    //   this.loadPosts.push(...posts)
+    // },
   };
 
   const watchedState = onChange(state, () => {
@@ -44,7 +54,7 @@ export default (target, lang) => {
 
   // Logic
   async function fetchData(url) {
-    const proxiedUrl = `https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`;
+    const proxiedUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
     const response = await axios.get(proxiedUrl)
       .catch((error) => {
         const proxyError = new Error(error.message);
@@ -74,20 +84,21 @@ export default (target, lang) => {
     e.preventDefault();
     watchedState.formState = 'processing';
     const url = urlInput.value;
+    // TODO: sometimes wrong links are accepted
+    // TODO: change errors state to an array?
+    // TODO: нормализовать возвращаемые из парсера фидов данные
+    //       на отдельные сущности фидов и постов
+    // TODO: add button to show tooltip with test feed URLs
+    // TODO: перенести генерацию uniqueId в app.js чтобы parseData() стала чистой
     validateUrl(url)
-      // TODO: sometimes wrong links are accepted
       .then((validatedUrl) => fetchData(validatedUrl))
       .then((fetchedData) => parseData(fetchedData))
-      .then((parsedFeed) => {
-        console.log(parsedFeed);
-        watchedState.loadedFeeds.push({ url, data: parsedFeed });
-      })
-      .then(() => {
-        // console.log('[Submit] Feed loaded');
-        // console.log(state.loadedFeeds);
+      .then(([parsedFeedMeta, parsedFeedPosts]) => {
+        watchedState.loadedFeeds.push({ ...parsedFeedMeta, sourceUrl: url });
+        watchedState.loadedPosts.push(...parsedFeedPosts);
+        console.log('[Submit] Feed loaded \n', state.loadedFeeds);
       })
       .catch((error) => {
-        // TODO: change errors state to an array?
         if (!error.code) {
           watchedState.errors.undefinedError = true;
         } else {

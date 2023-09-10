@@ -1,6 +1,8 @@
 export default {
   translation: {
     test: 'Проверка!',
+    source: 'Источник',
+    noPosts: 'Нет постов.',
     errors: {
       // Input validation
       urlValidationError: 'Текст не является URL.',
