@@ -1,33 +1,26 @@
 import { find } from 'lodash';
 import { Modal } from 'bootstrap';
-import onChange from 'on-change';
 
 function render(state, lang) {
-  const linksState = {
-    seenPostsIds: [],
-  };
-
-  function renderSeenLinks() {
-    const posts = document.querySelectorAll('.post');
-    posts.forEach((post) => {
-      const postId = post.getAttribute('data-post-id');
-      const title = post.querySelector('a');
-      if (linksState.seenPostsIds.includes(postId)) {
-        title.classList.remove('fw-bold');
-        title.classList.add('link-secondary', 'fw-normal');
-      }
-    });
-  }
-  const watchedLinksState = onChange(linksState, () => {
-    renderSeenLinks(linksState);
-  });
-  renderSeenLinks(linksState);
   const linkInput = document.querySelector('#link-form_input');
   const form = document.querySelector('#link-form');
   const button = document.querySelector('#link-form_button');
   const feedsTarget = document.querySelector('#feeds');
   const postsTarget = document.querySelector('#posts');
-  // TODO: add bootstrap tooltip 'no posts for this feed' if hovered feed has no posts
+  function renderSeenLinks() {
+    const posts = document.querySelectorAll('.post');
+    posts.forEach((post) => {
+      const postId = post.getAttribute('data-post-id');
+      const title = post.querySelector('a');
+      if (state.seenPostIds.includes(postId)) {
+        console.log(title);
+        title.classList.remove('fw-bold');
+        title.classList.add('link-secondary', 'fw-normal');
+        console.log(title);
+      }
+    });
+  }
+
   const toggleActive = (e) => {
     const { feedId } = e.target.dataset;
     const targetPosts = document.querySelectorAll(`.post[data-feed-id="${feedId}"]`);
@@ -36,16 +29,12 @@ function render(state, lang) {
     targetFeed.classList.toggle('active');
   };
   const getFeedbackElement = (message) => {
-    const feedback = document.createElement('div');
+    const feedback = document.createElement('p');
     feedback.classList.add('feedback', 'small'); // valid feedback
     feedback.textContent = message;
     return feedback;
   };
-  // TODO: добавить количество постов к фиду
-  // TODO: добавить возможность убрать фид
-  // TODO: добавить у постов справа muted текстом id фида, и у фидов muted их id
-  // TODO: добавить подсветку при наведениее на фид
-  // TODO: добавить сортировки
+  // TODO: разнести стейт и рендерфункции через свитчкейс как примере с гитхаба
   const getFeedsList = (feeds) => feeds.map((feed) => {
     const feedElement = document.createElement('div');
     feedElement.classList.add('card', 'p-2', 'feed');
@@ -89,14 +78,13 @@ function render(state, lang) {
     });
     return modal.querySelector('#postModal');
   };
-
   const getPostsList = (posts) => posts.map((post) => {
     const feedTitle = document.createElement('h5');
     feedTitle.textContent = find(state.loadedFeeds, (feed) => feed.id === post.parentFeedId).title;
     const postElement = document.createElement('div');
     const title = document.createElement('a');
     title.setAttribute('href', post.source);
-    title.addEventListener('click', () => watchedLinksState.seenPostsIds.push(post.id));
+    title.setAttribute('clickable', 'true');
     title.classList.add('col', 'fw-bold', 'd-flex', 'align-items-center');
     title.textContent = post.title;
     title.setAttribute('target', '_blank');
@@ -107,6 +95,7 @@ function render(state, lang) {
     showPostModalButton.textContent = lang.t('view');
     showPostModalButton.setAttribute('data-toggle', 'modal');
     showPostModalButton.setAttribute('data-target', '#postModal');
+    showPostModalButton.setAttribute('clickable', 'true');
     showPostModalButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
 
     const postModal = getPostModal(post);
@@ -114,7 +103,6 @@ function render(state, lang) {
       document.body.append(postModal);
       const modal = new Modal('#postModal');
       modal.show();
-      watchedLinksState.seenPostsIds.push(post.id);
     });
     postElement.setAttribute('data-feed-id', post.parentFeedId);
     postElement.setAttribute('data-post-id', post.id);
@@ -124,7 +112,6 @@ function render(state, lang) {
     postElement.addEventListener('mouseleave', toggleActive);
     return postElement;
   });
-
   // Render feeds and posts
   if (state.loadedFeeds.length) {
     const feedsList = getFeedsList(state.loadedFeeds);
@@ -135,7 +122,7 @@ function render(state, lang) {
     feedsTarget.replaceChildren();
     postsTarget.replaceChildren();
   }
-
+  renderSeenLinks();
   // Feedback for submit button
   // TODO: add spinner
   if (state.formState === 'processing') {
@@ -161,13 +148,13 @@ function render(state, lang) {
     if (isErrorThrown) {
       const errorMessage = lang.t(`errors.${errorCode}`);
       const newFeedback = getFeedbackElement(errorMessage);
-      newFeedback.classList.add('invalid-feedback');
+      newFeedback.classList.add('invalid-feedback', 'text-danger');
       form.append(newFeedback);
     }
   });
   if (state.success === true) {
     const newFeedback = getFeedbackElement(lang.t('success'));
-    newFeedback.classList.add('valid-feedback');
+    newFeedback.classList.add('valid-feedback', 'text-success');
     form.append(newFeedback);
   }
 }

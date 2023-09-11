@@ -10,7 +10,8 @@ export default (target, lang) => {
   const state = {
     // STATES: input, processing
     formState: 'input',
-    // TODO: change way errors
+    // TODO: implement a Set for seenIds, change way errors are kept,
+    // group data into 'data', 'ui', 'proccessing'
     errors: {
       inputEmptyError: false,
       urlValidationError: false,
@@ -23,6 +24,7 @@ export default (target, lang) => {
     success: false,
     loadedFeeds: [],
     loadedPosts: [],
+    seenPostIds: [],
     getFeedsUrls() {
       return this.loadedFeeds.map((feed) => feed.url);
     },
@@ -87,7 +89,14 @@ export default (target, lang) => {
         throw validationError;
       });
   }
-
+  // Clear feedback on input
+  function clearFeedback() {
+    Object.keys(watchedState.errors).forEach((errorType) => {
+      watchedState.errors[errorType] = false;
+    });
+    watchedState.success = false;
+  }
+  // Fetch new posts and update state
   async function updateFeeds() {
     const feedsUpdatePromises = Promise.all(watchedState.loadedFeeds.map((feed) => {
       const updateFeedPromise = fetchData(feed.url)
@@ -116,6 +125,7 @@ export default (target, lang) => {
   const form = document.querySelector('#link-form');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    clearFeedback();
     watchedState.formState = 'processing';
     const url = urlInput.value;
     // TODO: sometimes wrong links are accepted
@@ -150,11 +160,11 @@ export default (target, lang) => {
         urlInput.focus();
       });
   });
-  // Clear feedback on input
-  urlInput.addEventListener('input', () => {
-    Object.keys(watchedState.errors).forEach((errorType) => {
-      watchedState.errors[errorType] = false;
-    });
-    watchedState.success = false;
+  const postsList = document.querySelector('#posts');
+  postsList.addEventListener('click', (e) => {
+    const postId = e.target.closest('.post')?.getAttribute('data-post-id');
+    if (e.target.getAttribute('clickable')) {
+      watchedState.seenPostIds.push(postId);
+    }
   });
 };
