@@ -16,18 +16,20 @@
           <h1 class="display-3 text-white">RSS агрегатор</h1>
           <p class=" text-white lead">Пыщ пыщ попячся</p>
           <form id="link-form">
-            <label class="form-label text-white" for="rss-link">Ссылка на фид</label>
             <div class="row">
               <div class="col">
-                <input type="text" class="form-control col form-control-lg" id="link-form_input"
-                  placeholder="https://mysite.ru/feed.rss">
+                <div class="form-floating">
+                  <input type="text" autofocus autocomplete="off" required aria-label="url" class="form-control col form-control-lg" id="link-form_input"
+                  placeholder="ссылка RSS">
+                  <label for="link-form_input">Ссылка на RSS</label>
+                </div>
               </div>
               <div class="col-auto">
-                <button type="submit" form="link-form" name="link-form" class="btn btn-warning col-auto ms-2 h-100 px-5"
-                  id="link-form_button">Go!</button>
+                <button type="submit" aria-label="add" form="link-form" name="link-form" class="btn btn-warning col-auto ms-2 h-100 px-5"
+                  id="link-form_button">Добавить!</button>
               </div>
             </div>
-            <p class="form-text">Пример: вставить сюда адрес примера .rss</p>
+            <p class="form-text">Пример: https://ru.hexlet.io/lessons.rss</p>
           </form>
         </div>
       </div>
