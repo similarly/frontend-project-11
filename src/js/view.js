@@ -1,9 +1,28 @@
 import { find } from 'lodash';
+import { Modal } from 'bootstrap';
+import onChange from 'on-change';
 
 function render(state, lang) {
+  const linksState = {
+    seenPostsIds: [],
+  };
+  const watchedLinksState = onChange(linksState, () => {
+    renderSeenLinks(linksState);
+  });
+  function renderSeenLinks() {
+    const posts = document.querySelectorAll('.post');
+    posts.forEach((post) => {
+      const postId = post.getAttribute('data-post-id');
+      const title = post.querySelector('a');
+      console.log(watchedLinksState);
+      if (watchedLinksState.seenPostsIds.includes(postId)) {
+        title.classList.remove('fw-bold');
+        title.classList.add('link-secondary', 'fw-normal');
+      }
+    });
+  }
   const linkInput = document.querySelector('#link-form_input');
   const form = document.querySelector('#link-form');
-  const currentFeedback = document.querySelector('.feedback');
   const button = document.querySelector('#link-form_button');
   const feedsTarget = document.querySelector('#feeds');
   const postsTarget = document.querySelector('#posts');
@@ -17,7 +36,7 @@ function render(state, lang) {
   };
   const getFeedbackElement = (message) => {
     const feedback = document.createElement('div');
-    feedback.classList.add('feedback', 'invalid-feedback', 'row');
+    feedback.classList.add('feedback', 'small'); // valid feedback
     feedback.textContent = message;
     return feedback;
   };
@@ -28,41 +47,78 @@ function render(state, lang) {
   // TODO: добавить сортировки
   const getFeedsList = (feeds) => feeds.map((feed) => {
     const feedElement = document.createElement('div');
-    feedElement.classList.add('card', 'p-3', 'feed');
+    feedElement.classList.add('card', 'p-2', 'feed');
 
-    const title = document.createElement('h5');
+    const title = document.createElement('h2');
     title.textContent = feed.title;
+    title.classList.add('h6');
     const description = document.createElement('p');
-    description.classList.add('text-muted');
-    description.textContent = `Описание: ${feed.description}`;
-    const link = document.createElement('p');
-    link.textContent = `${lang.t('source')}: ${feed.link}`;
-    const source = document.createElement('p');
-    source.textContent = `URL фида: ${feed.sourceUrl}`;
-    source.classList.add('text-muted');
+    description.classList.add('text-muted', 'small');
+    description.textContent = `${feed.description}`;
 
     feedElement.setAttribute('data-feed-id', feed.id);
-    feedElement.append(title, description, link, source);
+    feedElement.append(title, description);
     feedElement.addEventListener('mouseenter', toggleActive);
     feedElement.addEventListener('mouseleave', toggleActive);
     return feedElement;
   });
+  const getPostModal = (post) => {
+    const modalHtml = `
+    <div id="postModal" class="modal fade show" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"></h5>
+            <button type="button" class="btn-close close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-break"></div>
+          <div class="modal-footer">
+          <a class="btn btn-primary post-source" target="_blank">Читать</a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    const modal = new DOMParser().parseFromString(modalHtml, 'text/html');
+    modal.querySelector('.modal-title').textContent = post.title;
+    modal.querySelector('.modal-body').textContent = post.description;
+    modal.querySelector('.post-source').setAttribute('href', post.source);
+    modal.addEventListener('hidden.bs.modal', () => {
+      modal.remove();
+    });
+    return modal.querySelector('#postModal');
+  };
+
   const getPostsList = (posts) => posts.map((post) => {
     const feedTitle = document.createElement('h5');
     feedTitle.textContent = find(state.loadedFeeds, (feed) => feed.id === post.parentFeedId).title;
     const postElement = document.createElement('div');
-    postElement.classList.add('card', 'p-3', 'post');
-    const title = document.createElement('h5');
+    const title = document.createElement('a');
+    title.setAttribute('href', post.source);
+    title.addEventListener('click', () => watchedLinksState.seenPostsIds.push(post.id));
+    title.classList.add('col', 'fw-bold', 'd-flex', 'align-items-center');
     title.textContent = post.title;
+    title.setAttribute('target', '_blank');
     const description = document.createElement('p');
     description.textContent = post.description;
-    const link = document.createElement('a');
-    link.classList.add('text-sm', 'text-secondary', 'post-link');
-    link.textContent = post.link;
-    link.setAttribute('href', post.link);
 
+    const showPostModalButton = document.createElement('button');
+    showPostModalButton.textContent = lang.t('view');
+    showPostModalButton.setAttribute('data-toggle', 'modal');
+    showPostModalButton.setAttribute('data-target', '#postModal');
+    showPostModalButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
+
+    const postModal = getPostModal(post);
+    showPostModalButton.addEventListener('click', () => {
+      document.body.append(postModal);
+      const modal = new Modal('#postModal');
+      modal.show();
+      watchedLinksState.seenPostsIds.push(post.id);
+    });
     postElement.setAttribute('data-feed-id', post.parentFeedId);
-    postElement.append(title, link, description);
+    postElement.setAttribute('data-post-id', post.id);
+    postElement.append(title, showPostModalButton);
+    postElement.classList.add('row', 'post');
     postElement.addEventListener('mouseenter', toggleActive);
     postElement.addEventListener('mouseleave', toggleActive);
     return postElement;
@@ -96,16 +152,23 @@ function render(state, lang) {
 
   // TODO: add positive feedback
   // Set feedback
-  if (currentFeedback) {
-    currentFeedback.remove();
+  const currentFeedback = document.querySelectorAll('.feedback');
+  if (currentFeedback.length) {
+    currentFeedback.forEach((feedback) => feedback.remove());
   }
   Object.entries(state.errors).forEach(([errorCode, isErrorThrown]) => {
     if (isErrorThrown) {
       const errorMessage = lang.t(`errors.${errorCode}`);
       const newFeedback = getFeedbackElement(errorMessage);
+      newFeedback.classList.add('invalid-feedback');
       form.append(newFeedback);
     }
   });
+  if (state.success === true) {
+    const newFeedback = getFeedbackElement(lang.t('success'));
+    newFeedback.classList.add('valid-feedback');
+    form.append(newFeedback);
+  }
 }
 
 export default render;

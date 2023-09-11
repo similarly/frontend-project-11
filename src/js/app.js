@@ -1,6 +1,7 @@
 import onChange from 'on-change';
 import * as yup from 'yup';
 import axios from 'axios';
+import { uniqueId, differenceBy } from 'lodash';
 import render from './view';
 import parseData from './parse';
 
@@ -19,20 +20,28 @@ export default (target, lang) => {
       parseError: false,
       unknownError: false,
     },
+    success: false,
     loadedFeeds: [],
     loadedPosts: [],
     getFeedsUrls() {
       return this.loadedFeeds.map((feed) => feed.url);
     },
-    // loadFeed(feedMeta) {
-    //   this.loadedFeeds.push({
-    //     id: watchedState.loadedFeeds.length + 1,
-    //     ...parsedFeedMeta,
-    //   })
-    // },
-    // loadPosts(posts) {
-    //   this.loadPosts.push(...posts)
-    // },
+    loadPosts(posts, parentFeedId) {
+      this.loadedPosts.push(...posts.map((post) => ({
+        id: uniqueId('post'),
+        parentFeedId,
+        ...post,
+      })));
+    },
+    loadFeed(feedMeta, url) {
+      const feedId = uniqueId('feed');
+      this.loadedFeeds.push({
+        id: feedId,
+        url,
+        ...feedMeta,
+      });
+      return feedId;
+    },
   };
 
   const watchedState = onChange(state, () => {
@@ -79,6 +88,31 @@ export default (target, lang) => {
       });
   }
 
+  async function updateFeeds() {
+    const feedsUpdatePromises = Promise.all(watchedState.loadedFeeds.map((feed) => {
+      const updateFeedPromise = fetchData(feed.url)
+        .then((fetchedData) => parseData(fetchedData))
+        .then(([, parsedFeedPosts]) => {
+          const newPosts = differenceBy(parsedFeedPosts, watchedState.loadedPosts, 'source');
+          if (!(newPosts.length === 0)) {
+            console.log(`Found updated feeds. Updating ${feed.id} with`, newPosts);
+            watchedState.loadPosts(newPosts, feed.id);
+          }
+        })
+        // TODO: Separate submit errors, and background update errors
+        .catch((error) => {
+          if (!error.code) {
+            watchedState.errors.undefinedError = true;
+          } else {
+            watchedState.errors[error.code] = true;
+          }
+          throw error;
+        });
+      return updateFeedPromise;
+    }));
+    feedsUpdatePromises.finally(() => setTimeout(() => updateFeeds(), 5000));
+  }
+  updateFeeds();
   const form = document.querySelector('#link-form');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -90,13 +124,17 @@ export default (target, lang) => {
     //       на отдельные сущности фидов и постов
     // TODO: add button to show tooltip with test feed URLs
     // TODO: перенести генерацию uniqueId в app.js чтобы parseData() стала чистой
+    // TODO: исправить undefined во view в мете фида
     validateUrl(url)
       .then((validatedUrl) => fetchData(validatedUrl))
       .then((fetchedData) => parseData(fetchedData))
       .then(([parsedFeedMeta, parsedFeedPosts]) => {
-        watchedState.loadedFeeds.push({ ...parsedFeedMeta, sourceUrl: url });
-        watchedState.loadedPosts.push(...parsedFeedPosts);
-        console.log('[Submit] Feed loaded \n', state.loadedFeeds);
+        const feedId = watchedState.loadFeed(parsedFeedMeta, url);
+        watchedState.loadPosts(parsedFeedPosts, feedId);
+        console.log('[Submit] Feed loaded \n', state);
+      })
+      .then(() => {
+        watchedState.success = true;
       })
       .catch((error) => {
         if (!error.code) {
@@ -112,10 +150,11 @@ export default (target, lang) => {
         urlInput.focus();
       });
   });
-  // Clear errors on input
+  // Clear feedback on input
   urlInput.addEventListener('input', () => {
     Object.keys(watchedState.errors).forEach((errorType) => {
       watchedState.errors[errorType] = false;
     });
+    watchedState.success = false;
   });
 };

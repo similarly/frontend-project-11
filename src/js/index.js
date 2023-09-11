@@ -1,4 +1,3 @@
-import bootstrap from 'bootstrap';
 import '../scss/app.scss';
 import i18next from 'i18next';
 import * as resources from '../lang/index';

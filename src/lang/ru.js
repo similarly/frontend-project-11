@@ -1,19 +1,19 @@
 export default {
   translation: {
-    test: 'Проверка!',
-    source: 'Источник',
-    noPosts: 'Нет постов.',
+    nothingToShow: 'Ничего нет.',
+    view: 'Просмотр',
+    success: 'RSS успешно загружен',
     errors: {
       // Input validation
-      urlValidationError: 'Текст не является URL.',
-      inputEmptyError: 'Поле не должно быть пустым.',
+      urlValidationError: 'Ссылка должна быть валидным URL',
+      inputEmptyError: 'Не должно быть пустым',
       // Network
-      networkError: 'Ошибка сети.',
-      proxyError: 'Ошибка прокси.',
+      networkError: 'Ошибка сети',
+      proxyError: 'Ошибка сети',
       // Document parsing
-      parseError: 'Неверный формат данных, ошибка парсинга.',
+      parseError: 'Ресурс не содержит валидный RSS',
       // Other
-      feedAlreadySubmittedError: 'Фид уже добавлен.',
+      feedAlreadySubmittedError: 'RSS уже существует',
       undefinedError: 'Неизвестная ошибка',
     },
   },

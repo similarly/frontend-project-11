@@ -1,7 +1,7 @@
 @import "~bootstrap/scss/bootstrap";
 
 body {
-    background-color: rgb(240, 238, 234);
+    /* background-color: rgb(240, 238, 234); */
     min-height: 100dvh;
     min-height: 100vh;
 }
@@ -13,21 +13,39 @@ body {
     justify-content: center;
     align-items: center; */
 }
-.post, .feed {
-    box-shadow:inset 0px 0px 0px 2px #bbeca600, 0 1px 3px #00000013;
+.form-text {
+    color: rgb(121, 121, 121);
+}
+#link-form_button {
+    font-size: 1.4rem;
+}
+.top-panel {
+    background-color: rgb(28, 28, 29);
+    display: grid;
+    place-items: center;
+}
+.feed {
+    box-shadow:inset 0px 0px 4px 2px #ffc10700, 0 1px 3px #00000013;
     transition: box-shadow .15s ease-in;
 }
+.post + .post {
+    &::before {
+        content: '';
+        width: 100%;
+        border-top: solid 1px #00000020;
+        display: block;
+        transform: translateY(-0.75rem);
+    }
+}
 .post.active, .feed.active {
-    box-shadow:inset 0px 0px 0px 2px #bbf3a3, 0 1px 3px #00000013;
+    /* box-shadow:inset 0px 0px 17px 2px #ffe96dcc, 0 1px 3px #00000013; */
     
     /* border: solid 3px #a0a0a0; */
 }
 .feedback {
     display: block !important;
 }
-.post-link {
-    width: fit-content;
-}
+
 .feeds-layout {
     margin-top: 1rem;
     display: grid;

@@ -1,5 +1,3 @@
-import { uniqueId } from 'lodash';
-
 function parseData(data) {
   const parser = new DOMParser();
   const document = parser.parseFromString(data, 'text/xml');
@@ -13,7 +11,6 @@ function parseData(data) {
   try {
     const rssElement = document.querySelector('rss');
     const rssVersion = rssElement.getAttribute('version');
-    const feedStateId = uniqueId('feed');
 
     const channelElement = rssElement.querySelector(':scope > channel');
 
@@ -23,18 +20,15 @@ function parseData(data) {
 
     const postElements = Array.from(channelElement.querySelectorAll(':scope > item'));
     const parsedPosts = postElements.map((post) => ({
-      id: uniqueId('post'),
-      parentFeedId: feedStateId,
-      link: post.querySelector(':scope > link').textContent,
+      source: post.querySelector(':scope > link').textContent,
       title: post.querySelector(':scope > title').textContent,
       description: post.querySelector(':scope > description').textContent,
     }));
 
     const parsedFeedMeta = {
-      id: feedStateId,
       rssVersion,
       title: channelTitle,
-      link: channelLink,
+      source: channelLink,
       description: channelDescription,
     };
     return [parsedFeedMeta, parsedPosts];

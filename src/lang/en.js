@@ -1,8 +1,8 @@
 export default {
   translation: {
-    test: 'Проверка!',
-    source: 'Source',
-    noPosts: 'No posts.',
+    nothingToShow: 'Nothing here.',
+    view: 'View',
+    success: 'RSS succesfully loaded',
     errors: {
       // Input validation
       urlValidationError: 'Text is not URL.',
