@@ -6,21 +6,22 @@ function render(state, lang) {
   const linksState = {
     seenPostsIds: [],
   };
-  const watchedLinksState = onChange(linksState, () => {
-    renderSeenLinks(linksState);
-  });
+
   function renderSeenLinks() {
     const posts = document.querySelectorAll('.post');
     posts.forEach((post) => {
       const postId = post.getAttribute('data-post-id');
       const title = post.querySelector('a');
-      console.log(watchedLinksState);
-      if (watchedLinksState.seenPostsIds.includes(postId)) {
+      if (linksState.seenPostsIds.includes(postId)) {
         title.classList.remove('fw-bold');
         title.classList.add('link-secondary', 'fw-normal');
       }
     });
   }
+  const watchedLinksState = onChange(linksState, () => {
+    renderSeenLinks(linksState);
+  });
+  renderSeenLinks(linksState);
   const linkInput = document.querySelector('#link-form_input');
   const form = document.querySelector('#link-form');
   const button = document.querySelector('#link-form_button');
