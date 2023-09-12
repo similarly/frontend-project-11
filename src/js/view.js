@@ -45,7 +45,7 @@ function render(state, lang) {
   });
   const getPostModal = (post) => {
     const modalHtml = `
-    <div id="modal" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="modal" aria-modal="true">
+    <div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -81,8 +81,8 @@ function render(state, lang) {
 
     const showPostModalButton = document.createElement('button');
     showPostModalButton.textContent = lang.t('view');
-    showPostModalButton.setAttribute('data-toggle', 'modal');
-    showPostModalButton.setAttribute('data-target', '#modal');
+    showPostModalButton.setAttribute('data-bs-toggle', 'modal');
+    showPostModalButton.setAttribute('data-bs-target', '#modal');
     showPostModalButton.setAttribute('clickable', 'true');
     showPostModalButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
 
