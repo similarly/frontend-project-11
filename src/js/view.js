@@ -34,7 +34,7 @@ function render(state, lang) {
     feedback.textContent = message;
     return feedback;
   };
-  // TODO: разнести стейт и рендерфункции через свитчкейс как примере с гитхаба
+  // TODO: разнести стейт и рендерфункции через свитчкейс
   const getFeedsList = (feeds) => feeds.map((feed) => {
     const feedElement = document.createElement('div');
     feedElement.classList.add('card', 'p-2', 'feed');
@@ -138,7 +138,6 @@ function render(state, lang) {
     linkInput.classList.remove('is-invalid');
   }
 
-  // TODO: add positive feedback
   // Set feedback
   const currentFeedback = document.querySelectorAll('.feedback');
   if (currentFeedback.length) {

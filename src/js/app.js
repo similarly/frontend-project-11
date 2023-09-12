@@ -68,15 +68,10 @@ export default (target, lang) => {
     const proxiedUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
     const response = await axios.get(proxiedUrl)
       .catch((error) => {
-        const proxyError = new Error(error.message);
-        proxyError.code = 'proxyError';
-        throw proxyError;
+        const networkError = new Error(error.message);
+        networkError.code = 'networkError';
+        throw networkError;
       });
-    if (response.data.status.http_code !== 200) {
-      const networkError = new Error('Network error.');
-      networkError.code = 'networkError';
-      throw networkError;
-    }
     return response.data.contents;
   }
 
@@ -108,7 +103,7 @@ export default (target, lang) => {
             watchedState.loadPosts(newPosts, feed.id);
           }
         })
-        // TODO: Separate submit errors, and background update errors
+        // TODO: Separate submission errors, and background update errors
         .catch((error) => {
           if (!error.code) {
             watchedState.errors.undefinedError = true;
@@ -128,13 +123,7 @@ export default (target, lang) => {
     clearFeedback();
     watchedState.formState = 'processing';
     const url = urlInput.value;
-    // TODO: sometimes wrong links are accepted
-    // TODO: change errors state to an array?
-    // TODO: нормализовать возвращаемые из парсера фидов данные
-    //       на отдельные сущности фидов и постов
-    // TODO: add button to show tooltip with test feed URLs
-    // TODO: перенести генерацию uniqueId в app.js чтобы parseData() стала чистой
-    // TODO: исправить undefined во view в мете фида
+    // TODO: change errors state property to an array?
     validateUrl(url)
       .then((validatedUrl) => fetchData(validatedUrl))
       .then((fetchedData) => parseData(fetchedData))
