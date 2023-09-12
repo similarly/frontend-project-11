@@ -64,9 +64,6 @@ function render(state, lang) {
     modal.querySelector('.modal-title').textContent = post.title;
     modal.querySelector('.modal-body').textContent = post.description;
     modal.querySelector('.post-source').setAttribute('href', post.source);
-    modal.addEventListener('hidden.bs.modal', () => {
-      modal.remove();
-    });
     return modal.querySelector('#postModal');
   };
   const getPostsList = (posts) => posts.map((post) => {
@@ -90,6 +87,7 @@ function render(state, lang) {
     showPostModalButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
 
     const postModal = getPostModal(post);
+    postModal.addEventListener('hidden.bs.modal', () => postModal.remove());
     showPostModalButton.addEventListener('click', () => {
       document.body.append(postModal);
       const modal = new Modal('#postModal');
