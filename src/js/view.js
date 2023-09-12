@@ -21,13 +21,6 @@ function render(state, lang) {
     });
   }
 
-  const toggleActive = (e) => {
-    const { feedId } = e.target.dataset;
-    const targetPosts = document.querySelectorAll(`.post[data-feed-id="${feedId}"]`);
-    const targetFeed = document.querySelector(`.feed[data-feed-id="${feedId}"]`);
-    targetPosts.forEach((post) => post.classList.toggle('active'));
-    targetFeed.classList.toggle('active');
-  };
   const getFeedbackElement = (message) => {
     const feedback = document.createElement('p');
     feedback.classList.add('feedback', 'small'); // valid feedback
@@ -48,8 +41,6 @@ function render(state, lang) {
 
     feedElement.setAttribute('data-feed-id', feed.id);
     feedElement.append(title, description);
-    feedElement.addEventListener('mouseenter', toggleActive);
-    feedElement.addEventListener('mouseleave', toggleActive);
     return feedElement;
   });
   const getPostModal = (post) => {
@@ -85,7 +76,7 @@ function render(state, lang) {
     const title = document.createElement('a');
     title.setAttribute('href', post.source);
     title.setAttribute('clickable', 'true');
-    title.classList.add('col', 'fw-bold', 'd-flex', 'align-items-center');
+    title.classList.add('fw-bold'); // col', 'd-flex', 'align-items-center'
     title.textContent = post.title;
     title.setAttribute('target', '_blank');
     const description = document.createElement('p');
@@ -107,9 +98,7 @@ function render(state, lang) {
     postElement.setAttribute('data-feed-id', post.parentFeedId);
     postElement.setAttribute('data-post-id', post.id);
     postElement.append(title, showPostModalButton);
-    postElement.classList.add('row', 'post');
-    postElement.addEventListener('mouseenter', toggleActive);
-    postElement.addEventListener('mouseleave', toggleActive);
+    postElement.classList.add('list-group-item', 'd-flex', 'post', 'justify-content-between', 'align-items-start', 'border-0');
     return postElement;
   });
   // Render feeds and posts

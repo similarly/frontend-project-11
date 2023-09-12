@@ -30,11 +30,14 @@ body {
 }
 .post + .post {
     &::before {
+        position: absolute;
         content: '';
         width: 100%;
         border-top: solid 1px #00000020;
         display: block;
-        transform: translateY(-0.75rem);
+        /* transform: translateY(-0.75rem); */
+        top: 0;
+        right: 0;
     }
 }
 .post.active, .feed.active {
