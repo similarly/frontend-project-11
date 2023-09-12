@@ -45,16 +45,16 @@ function render(state, lang) {
   });
   const getPostModal = (post) => {
     const modalHtml = `
-    <div id="postModal" class="modal fade show" tabindex="-1">
-      <div class="modal-dialog">
+    <div id="modal" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="modal" aria-modal="true">
+      <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title"></h5>
-            <button type="button" class="btn-close close" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body text-break"></div>
           <div class="modal-footer">
-          <a class="btn btn-primary post-source" target="_blank">Читать</a>
+          <a class="btn btn-primary full-article" target="_blank" role="button" rel="noopener noreferrer">Читать полностью</a>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
           </div>
         </div>
@@ -63,8 +63,8 @@ function render(state, lang) {
     const modal = new DOMParser().parseFromString(modalHtml, 'text/html');
     modal.querySelector('.modal-title').textContent = post.title;
     modal.querySelector('.modal-body').textContent = post.description;
-    modal.querySelector('.post-source').setAttribute('href', post.source);
-    return modal.querySelector('#postModal');
+    modal.querySelector('.full-article').setAttribute('href', post.source);
+    return modal.querySelector('#modal');
   };
   const getPostsList = (posts) => posts.map((post) => {
     const feedTitle = document.createElement('h5');
@@ -82,7 +82,7 @@ function render(state, lang) {
     const showPostModalButton = document.createElement('button');
     showPostModalButton.textContent = lang.t('view');
     showPostModalButton.setAttribute('data-toggle', 'modal');
-    showPostModalButton.setAttribute('data-target', '#postModal');
+    showPostModalButton.setAttribute('data-target', '#modal');
     showPostModalButton.setAttribute('clickable', 'true');
     showPostModalButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
 
@@ -90,7 +90,7 @@ function render(state, lang) {
     postModal.addEventListener('hidden.bs.modal', () => postModal.remove());
     showPostModalButton.addEventListener('click', () => {
       document.body.append(postModal);
-      const modal = new Modal('#postModal');
+      const modal = new Modal('#modal');
       modal.show();
     });
     postElement.setAttribute('data-feed-id', post.parentFeedId);
