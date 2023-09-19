@@ -1,7 +1,6 @@
 @import "~bootstrap/scss/bootstrap";
 
 body {
-    /* background-color: rgb(240, 238, 234); */
     min-height: 100dvh;
     min-height: 100vh;
 }
@@ -9,9 +8,6 @@ body {
 #app {
     min-height: 100dvh;
     min-height: 100vh;
-    /* display: flex;
-    justify-content: center;
-    align-items: center; */
 }
 .form-text {
     color: rgb(121, 121, 121);
@@ -35,16 +31,11 @@ body {
         width: 100%;
         border-top: solid 1px #00000020;
         display: block;
-        /* transform: translateY(-0.75rem); */
         top: 0;
         right: 0;
     }
 }
-.post.active, .feed.active {
-    /* box-shadow:inset 0px 0px 17px 2px #ffe96dcc, 0 1px 3px #00000013; */
-    
-    /* border: solid 3px #a0a0a0; */
-}
+
 .feedback {
     display: block !important;
 }
