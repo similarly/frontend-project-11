@@ -40,18 +40,17 @@ function render(state, elements, lang) {
   const getPostsList = (posts) => posts.map((post) => {
     const feedTitle = document.createElement('h5');
     feedTitle.textContent = find(state.loadedFeeds, (feed) => feed.id === post.parentFeedId).title;
-    const postElement = document.createElement('div');
+
     const title = document.createElement('a');
     title.setAttribute('href', post.source);
     title.setAttribute('clickable', 'true');
     title.classList.add('fw-bold');
     title.textContent = post.title;
     title.setAttribute('target', '_blank');
-    const description = document.createElement('p');
-    description.textContent = post.description;
 
     const showPostModalButton = getShowPostModalButton(post);
 
+    const postElement = document.createElement('div');
     postElement.setAttribute('data-feed-id', post.parentFeedId);
     postElement.setAttribute('data-post-id', post.id);
     postElement.append(title, showPostModalButton);
