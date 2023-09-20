@@ -25,6 +25,10 @@ export default async () => {
     postsList: document.querySelector('#posts'),
     feedsList: document.querySelector('#feeds'),
     feedbackContainer: document.querySelector('#feedback-container'),
+    modal: document.querySelector('#modal'),
+    modalTitle: document.querySelector('.modal-title'),
+    modalBody: document.querySelector('.modal-body'),
+    modalFullButton: document.querySelector('.full-article'),
   };
   yup.setLocale({
     mixed: {
@@ -45,7 +49,7 @@ export default async () => {
     /* input; processing */
     formState: 'input',
     seenPostIds: [],
-    shownModal: null,
+    currentShownModalPostId: null,
   };
 
   const watchedState = onChange(state, () => {
@@ -141,6 +145,7 @@ export default async () => {
     const postId = e.target.closest('.post')?.getAttribute('data-post-id');
     if (e.target.getAttribute('clickable')) {
       watchedState.seenPostIds.push(postId);
+      watchedState.currentShownModalPostId = postId;
     }
   });
 };

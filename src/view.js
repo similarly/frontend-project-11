@@ -1,5 +1,4 @@
 import { find } from 'lodash';
-import { Modal } from 'bootstrap';
 
 function render(state, elements, lang) {
   /* TODO:
@@ -29,7 +28,15 @@ function render(state, elements, lang) {
     feedElement.append(title, description);
     return feedElement;
   });
-
+  const getShowPostModalButton = () => {
+    const button = document.createElement('button');
+    button.textContent = lang.t('view');
+    button.setAttribute('data-bs-toggle', 'modal');
+    button.setAttribute('data-bs-target', '#modal');
+    button.setAttribute('clickable', 'true');
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
+    return button;
+  };
   const getPostsList = (posts) => posts.map((post) => {
     const feedTitle = document.createElement('h5');
     feedTitle.textContent = find(state.loadedFeeds, (feed) => feed.id === post.parentFeedId).title;
@@ -43,19 +50,8 @@ function render(state, elements, lang) {
     const description = document.createElement('p');
     description.textContent = post.description;
 
-    const modal = document.querySelector('#modal');
+    const showPostModalButton = getShowPostModalButton(post);
 
-    const showPostModalButton = document.createElement('button');
-    showPostModalButton.textContent = lang.t('view');
-    showPostModalButton.setAttribute('data-bs-toggle', 'modal');
-    showPostModalButton.setAttribute('data-bs-target', '#modal');
-    showPostModalButton.setAttribute('clickable', 'true');
-    showPostModalButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'col-auto');
-    showPostModalButton.addEventListener('click', () => {
-      modal.querySelector('.modal-title').textContent = post.title;
-      modal.querySelector('.modal-body').textContent = post.description;
-      modal.querySelector('.full-article').setAttribute('href', post.source);
-    });
     postElement.setAttribute('data-feed-id', post.parentFeedId);
     postElement.setAttribute('data-post-id', post.id);
     postElement.append(title, showPostModalButton);
@@ -63,6 +59,16 @@ function render(state, elements, lang) {
     return postElement;
   });
 
+  function renderModal() {
+    if (state.currentShownModalPostId === null) {
+      return;
+    }
+    const shownPost = find(state.loadedPosts, (post) => post.id === state.currentShownModalPostId);
+    const { modalTitle, modalBody, modalFullButton } = elements;
+    modalTitle.textContent = shownPost.title;
+    modalBody.textContent = shownPost.description;
+    modalFullButton.setAttribute('href', shownPost.source);
+  }
   function renderFeedsAndPosts() {
     if (state.loadedFeeds.length) {
       const feedsList = getFeedsList(state.loadedFeeds);
@@ -74,7 +80,7 @@ function render(state, elements, lang) {
       elements.postsList.replaceChildren();
     }
   }
-  function renderSeenLinks() {
+  function renderViewedPosts() {
     const posts = document.querySelectorAll('.post');
     posts.forEach((post) => {
       const postId = post.getAttribute('data-post-id');
@@ -114,10 +120,11 @@ function render(state, elements, lang) {
     }
   }
   renderFeedsAndPosts();
-  renderSeenLinks();
+  renderViewedPosts();
   renderButtonFeedback();
   renderInputValidity();
   renderFeedback();
+  renderModal();
 }
 
 export default render;
