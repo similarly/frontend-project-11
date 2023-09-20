@@ -8,14 +8,14 @@ Service designed for RSS feeds agregation on one page. Allows you to submit many
 
 ## Install
 
-0. You need to have isntalled latest node.js and npm
+0. You need to have installed latest node.js and npm
 1. Install dependencies `npm install`
-2. Build a project `npm run build` 
-3. Run on a server `npm run dev` or with hot reloading `npm run serve`
+2. Build a project `npm run build`
+3. Run on a server `npm run dev` or for hot reloading `npm run serve`
 
 ## Usage
 
-1. Paste URL of a .rss feed into input and click 'Добавить!'
+1. Paste URL of a RSS feed into input and click 'Добавить!'
 
 ## Hexlet tests and linter status
 

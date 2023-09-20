@@ -3,7 +3,7 @@ import * as yup from 'yup';
 import axios from 'axios';
 import { uniqueId, differenceBy } from 'lodash';
 import i18next from 'i18next';
-import render from './view';
+import getRenderFunction from './view';
 import parseData from './parse';
 import * as resources from './lang/index';
 
@@ -40,24 +40,26 @@ export default async () => {
     },
   });
   const state = {
-    // data
-    error: null,
-    success: false,
-    loadedFeeds: [],
-    loadedPosts: [],
-    // ui
-    /* input; processing */
-    formState: 'input',
-    seenPostIds: [],
-    currentShownModalPostId: null,
+    data: {
+      loadedFeeds: [],
+      loadedPosts: [],
+    },
+    ui: {
+      /* input; processing */
+      formState: 'input',
+      viewedPostsId: [],
+      currentShownModalPostId: null,
+    },
+    feedback: {
+      error: null,
+      success: false,
+    },
   };
 
-  const watchedState = onChange(state, () => {
-    render(state, elements, i18nextInstance);
-  });
-  const getFeedsUrls = (feeds) => feeds.map((feed) => feed.url);
+  const watchedState = onChange(state, getRenderFunction(state, elements, i18nextInstance));
+  const getLoadedFeedsUrls = (feeds) => feeds.map((feed) => feed.url);
   const loadPosts = (posts, parentFeedId) => {
-    watchedState.loadedPosts.push(...posts.map((post) => ({
+    watchedState.data.loadedPosts.push(...posts.map((post) => ({
       id: uniqueId('post'),
       parentFeedId,
       ...post,
@@ -65,7 +67,7 @@ export default async () => {
   };
   const loadFeed = (feedMeta, url) => {
     const feedId = uniqueId('feed');
-    watchedState.loadedFeeds.push({
+    watchedState.data.loadedFeeds.push({
       id: feedId,
       url,
       ...feedMeta,
@@ -85,7 +87,8 @@ export default async () => {
   }
 
   async function validateUrl(url) {
-    const schema = yup.string().required().url().notOneOf(getFeedsUrls(watchedState.loadedFeeds));
+    const loadedFeedUrls = getLoadedFeedsUrls(watchedState.data.loadedFeeds);
+    const schema = yup.string().required().url().notOneOf(loadedFeedUrls);
     return schema.validate(url)
       .catch((error) => {
         const validationError = new Error(error.message);
@@ -95,11 +98,11 @@ export default async () => {
   }
 
   async function updateFeeds() {
-    const feedsUpdatePromises = Promise.all(watchedState.loadedFeeds.map((feed) => {
+    const feedsUpdatePromises = Promise.all(watchedState.data.loadedFeeds.map((feed) => {
       const updateFeedPromise = fetchData(feed.url)
         .then((fetchedData) => parseData(fetchedData))
         .then(([, parsedFeedPosts]) => {
-          const newPosts = differenceBy(parsedFeedPosts, watchedState.loadedPosts, 'source');
+          const newPosts = differenceBy(parsedFeedPosts, watchedState.data.loadedPosts, 'source');
           if (!(newPosts.length === 0)) {
             loadPosts(newPosts, feed.id);
           }
@@ -114,9 +117,9 @@ export default async () => {
   updateFeeds();
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
-    watchedState.error = null;
-    watchedState.success = null;
-    watchedState.formState = 'processing';
+    watchedState.feedback.error = null;
+    watchedState.feedback.success = null;
+    watchedState.ui.formState = 'processing';
     const url = elements.urlInput.value;
     validateUrl(url)
       .then((validatedUrl) => fetchData(validatedUrl))
@@ -126,26 +129,26 @@ export default async () => {
         loadPosts(parsedFeedPosts, feedId);
       })
       .then(() => {
-        watchedState.success = true;
+        watchedState.feedback.success = true;
       })
       .catch((error) => {
         if (!error.code) {
-          watchedState.error = 'undefinedError';
+          watchedState.feedback.error = 'undefinedError';
         } else {
-          watchedState.error = error.code;
+          watchedState.feedback.error = error.code;
         }
         throw error;
       })
       .finally(() => {
         elements.form.reset();
-        watchedState.formState = 'input';
+        watchedState.ui.formState = 'input';
       });
   });
   elements.postsList.addEventListener('click', (e) => {
     const postId = e.target.closest('.post')?.getAttribute('data-post-id');
     if (e.target.getAttribute('clickable')) {
-      watchedState.seenPostIds.push(postId);
-      watchedState.currentShownModalPostId = postId;
+      watchedState.ui.viewedPostsId.push(postId);
+      watchedState.ui.currentShownModalPostId = postId;
     }
   });
 };
