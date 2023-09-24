@@ -6,10 +6,7 @@ const getFeedbackElement = (message) => {
   feedback.textContent = message;
   return feedback;
 };
-const getFeedsList = (state) => state.data.loadedFeeds.map((feed) => {
-  const feedElement = document.createElement('div');
-  feedElement.classList.add('card', 'p-2', 'feed');
-
+const getFeedsListItems = (state) => state.data.loadedFeeds.map((feed) => {
   const title = document.createElement('h2');
   title.textContent = feed.title;
   title.classList.add('h6');
@@ -17,6 +14,9 @@ const getFeedsList = (state) => state.data.loadedFeeds.map((feed) => {
   description.classList.add('text-muted', 'small');
   description.textContent = `${feed.description}`;
 
+  const feedElement = document.createElement('div');
+  feedElement.classList.add('card', 'p-2');
+  feedElement.classList.add('list-group-item', 'border-1', 'd-flex', 'justify-content-between', 'align-items-start');
   feedElement.setAttribute('data-feed-id', feed.id);
   feedElement.append(title, description);
   return feedElement;
@@ -32,7 +32,7 @@ const getShowPostModalButton = (lang) => {
   return button;
 };
 
-const getPostsList = (state, lang) => state.data.loadedPosts.map((post) => {
+const getPostsListItems = (state, lang) => state.data.loadedPosts.map((post) => {
   const title = document.createElement('a');
   title.setAttribute('href', post.source);
   title.setAttribute('clickable', 'true');
@@ -49,19 +49,26 @@ const getPostsList = (state, lang) => state.data.loadedPosts.map((post) => {
   const postElement = document.createElement('div');
   postElement.setAttribute('data-feed-id', post.parentFeedId);
   postElement.setAttribute('data-post-id', post.id);
-  postElement.append(title, showPostModalButton);
   postElement.classList.add('list-group-item', 'd-flex', 'post', 'justify-content-between', 'align-items-start', 'border-0');
+  postElement.append(title, showPostModalButton);
+
   return postElement;
 });
 
+// return whole block instead of list for feeds/posts, and hide it when no posts and feeds
 function renderFeeds(state, elements) {
-  const feedsList = getFeedsList(state);
-  elements.feedsList.replaceChildren(...feedsList);
+  const feedsListItems = getFeedsListItems(state);
+  elements.feedsList.replaceChildren(...feedsListItems);
+  if (feedsListItems.length === 0) {
+    elements.contentLayout.classList.add('d-none');
+  } else {
+    elements.contentLayout.classList.remove('d-none');
+  }
 }
 
 function renderPosts(state, elements, lang) {
-  const postsList = getPostsList(state, lang);
-  elements.postsList.replaceChildren(...postsList);
+  const postsListItems = getPostsListItems(state, lang);
+  elements.postsList.replaceChildren(...postsListItems);
 }
 
 function renderModal(state, elements) {
@@ -91,7 +98,7 @@ function renderViewedPosts(state) {
 }
 
 function renderSubmitButtonFeedback(state, elements) {
-  if (state.ui.formState === 'processing') {
+  if (state.loadingProcess === 'loading') {
     elements.submitButton.setAttribute('disabled', '');
   } else {
     elements.submitButton.removeAttribute('disabled');
@@ -99,36 +106,34 @@ function renderSubmitButtonFeedback(state, elements) {
 }
 
 function setFocus(state, elements) {
-  if (state.formState === 'input') {
+  if (state.loadingProcess === 'failure') {
     elements.urlInput.focus();
   }
 }
 
-function renderInputValidity(state, elements) {
-  if (state.feedback.error) {
-    elements.urlInput.classList.add('is-invalid');
-  } else {
-    elements.urlInput.classList.remove('is-invalid');
-  }
-}
-
 function renderFeedback(state, elements, lang) {
-  elements.feedbackContainer.replaceChildren();
-  if (state.feedback.error) {
-    const errorMessage = lang.t(`errors.${state.feedback.error}`);
-    const newFeedback = getFeedbackElement(errorMessage);
-    newFeedback.classList.add('invalid-feedback', 'text-danger');
-    elements.feedbackContainer.replaceChildren(newFeedback);
-  }
-  if (state.feedback.success === true) {
+  if (state.form.valid === true) {
+    elements.urlInput.classList.remove('is-invalid');
+    elements.urlInput.classList.add('is-valid');
     const newFeedback = getFeedbackElement(lang.t('success'));
     newFeedback.classList.add('valid-feedback', 'text-success');
+    elements.feedbackContainer.replaceChildren(newFeedback);
+  } else {
+    elements.urlInput.classList.add('is-invalid');
+    elements.urlInput.classList.remove('is-valid');
+    const errorMessage = lang.t(`errors.${state.form.error}`);
+    const newFeedback = getFeedbackElement(errorMessage);
+    newFeedback.classList.add('invalid-feedback', 'text-danger');
     elements.feedbackContainer.replaceChildren(newFeedback);
   }
 }
 
 const getRenderFunction = (state, elements, lang) => (path) => {
   switch (path) {
+    case 'loadingProcess':
+      renderSubmitButtonFeedback(state, elements);
+      setFocus(state, elements);
+      break;
     case 'data.loadedFeeds':
       renderFeeds(state, elements);
       break;
@@ -141,13 +146,8 @@ const getRenderFunction = (state, elements, lang) => (path) => {
     case 'ui.viewedPostsId':
       renderViewedPosts(state);
       break;
-    case 'ui.formState':
-      renderSubmitButtonFeedback(state, elements);
-      setFocus(state, elements);
-      break;
-    case 'feedback.error':
-    case 'feedback.success':
-      renderInputValidity(state, elements);
+    case 'form.error':
+    case 'form.valid':
       renderFeedback(state, elements, lang);
       break;
     default:

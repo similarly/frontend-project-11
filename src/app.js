@@ -8,11 +8,6 @@ import parseData from './parse';
 import * as resources from './lang/index';
 
 export default async () => {
-  /* TODO:
-    add Set for keeping seenIds
-    add error in fetchData func on a fixed timeout?
-    pass watchedState getter function to view renderer
-  */
   const i18nextInstance = i18next.createInstance();
   await i18nextInstance.init({
     lng: 'ru',
@@ -22,6 +17,7 @@ export default async () => {
     urlInput: document.querySelector('#link-form_input'),
     form: document.querySelector('#link-form'),
     submitButton: document.querySelector('#link-form_button'),
+    contentLayout: document.querySelector('#content-layout'),
     postsList: document.querySelector('#posts'),
     feedsList: document.querySelector('#feeds'),
     feedbackContainer: document.querySelector('#feedback-container'),
@@ -40,19 +36,19 @@ export default async () => {
     },
   });
   const state = {
+    /* idle ; loading ; failure */
+    loadingProcess: 'idle',
     data: {
       loadedFeeds: [],
       loadedPosts: [],
     },
     ui: {
-      /* input; processing */
-      formState: 'input',
       viewedPostsId: [],
       currentShownModalPostId: null,
     },
-    feedback: {
+    form: {
       error: null,
-      success: false,
+      valid: null,
     },
   };
 
@@ -74,10 +70,24 @@ export default async () => {
     });
     return feedId;
   };
-
+  const addProxy = (url) => {
+    const proxiedUrl = new URL('/get', 'https://allorigins.hexlet.app');
+    proxiedUrl.searchParams.set('url', url);
+    proxiedUrl.searchParams.set('disableCache', 'true');
+    console.log(proxiedUrl.toString());
+    return proxiedUrl.toString();
+  };
   async function fetchData(url) {
-    const proxiedUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
+    const proxiedUrl = addProxy(url);
     const response = await axios.get(proxiedUrl)
+      .then((r) => {
+        if (r.data.status?.error?.code === 'ENOTFOUND') {
+          const networkError = new Error(r.data.status.error.code);
+          networkError.code = 'networkError';
+          throw networkError;
+        }
+        return r;
+      })
       .catch((error) => {
         const networkError = new Error(error.message);
         networkError.code = 'networkError';
@@ -101,8 +111,8 @@ export default async () => {
     const feedsUpdatePromises = Promise.all(watchedState.data.loadedFeeds.map((feed) => {
       const updateFeedPromise = fetchData(feed.url)
         .then((fetchedData) => parseData(fetchedData))
-        .then(([, parsedFeedPosts]) => {
-          const newPosts = differenceBy(parsedFeedPosts, watchedState.data.loadedPosts, 'source');
+        .then(({ parsedPosts }) => {
+          const newPosts = differenceBy(parsedPosts, watchedState.data.loadedPosts, 'source');
           if (!(newPosts.length === 0)) {
             loadPosts(newPosts, feed.id);
           }
@@ -117,31 +127,32 @@ export default async () => {
   updateFeeds();
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
-    watchedState.feedback.error = null;
-    watchedState.feedback.success = null;
-    watchedState.ui.formState = 'processing';
+    watchedState.loadingProcess = 'loading';
     const url = elements.urlInput.value;
     validateUrl(url)
       .then((validatedUrl) => fetchData(validatedUrl))
       .then((fetchedData) => parseData(fetchedData))
-      .then(([parsedFeedMeta, parsedFeedPosts]) => {
+      .then(({ parsedFeedMeta, parsedPosts }) => {
         const feedId = loadFeed(parsedFeedMeta, url);
-        loadPosts(parsedFeedPosts, feedId);
+        loadPosts(parsedPosts, feedId);
       })
       .then(() => {
-        watchedState.feedback.success = true;
+        watchedState.loadingProcess = 'idle';
+        watchedState.form.error = null;
+        watchedState.form.valid = true;
       })
       .catch((error) => {
+        watchedState.form.valid = false;
+        watchedState.loadingProcess = 'failure';
         if (!error.code) {
-          watchedState.feedback.error = 'undefinedError';
+          watchedState.form.error = 'undefinedError';
         } else {
-          watchedState.feedback.error = error.code;
+          watchedState.form.error = error.code;
         }
         throw error;
       })
       .finally(() => {
         elements.form.reset();
-        watchedState.ui.formState = 'input';
       });
   });
   elements.postsList.addEventListener('click', (e) => {
