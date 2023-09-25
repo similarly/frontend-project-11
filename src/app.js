@@ -53,7 +53,7 @@ export default async () => {
   };
 
   const watchedState = onChange(state, getRenderFunction(state, elements, i18nextInstance));
-  const getLoadedFeedsUrls = (feeds) => feeds.map((feed) => feed.url);
+
   const loadPosts = (posts, parentFeedId) => {
     watchedState.data.loadedPosts.push(...posts.map((post) => ({
       id: uniqueId('post'),
@@ -61,43 +61,21 @@ export default async () => {
       ...post,
     })));
   };
-  const loadFeed = (feedMeta, url) => {
-    const feedId = uniqueId('feed');
-    watchedState.data.loadedFeeds.push({
-      id: feedId,
-      url,
-      ...feedMeta,
-    });
-    return feedId;
-  };
+
   const addProxy = (url) => {
     const proxiedUrl = new URL('/get', 'https://allorigins.hexlet.app');
     proxiedUrl.searchParams.set('url', url);
     proxiedUrl.searchParams.set('disableCache', 'true');
-    console.log(proxiedUrl.toString());
     return proxiedUrl.toString();
   };
-  async function fetchData(url) {
-    const proxiedUrl = addProxy(url);
-    const response = await axios.get(proxiedUrl)
-      .then((r) => {
-        if (r.data.status?.error?.code === 'ENOTFOUND') {
-          const networkError = new Error(r.data.status.error.code);
-          networkError.code = 'networkError';
-          throw networkError;
-        }
-        return r;
-      })
-      .catch((error) => {
-        const networkError = new Error(error.message);
-        networkError.code = 'networkError';
-        throw networkError;
-      });
-    return response.data.contents;
-  }
 
-  async function validateUrl(url) {
-    const loadedFeedUrls = getLoadedFeedsUrls(watchedState.data.loadedFeeds);
+  const typeError = (err) => {
+    if (err.message === 'Network Error') { return 'networkError'; }
+    if (err.code) { return err.code; }
+    return 'undefinedError';
+  };
+
+  function validateUrl(url, loadedFeedUrls) {
     const schema = yup.string().required().url().notOneOf(loadedFeedUrls);
     return schema.validate(url)
       .catch((error) => {
@@ -107,11 +85,11 @@ export default async () => {
       });
   }
 
-  async function updateFeeds() {
-    const feedsUpdatePromises = Promise.all(watchedState.data.loadedFeeds.map((feed) => {
-      const updateFeedPromise = fetchData(feed.url)
-        .then((fetchedData) => parseData(fetchedData))
-        .then(({ parsedPosts }) => {
+  function updateFeeds() {
+    const feedsUpdatePromises = Promise.all(
+      watchedState.data.loadedFeeds.map((feed) => axios.get(feed.url)
+        .then((fetchedData) => {
+          const { parsedPosts } = parseData(fetchedData);
           const newPosts = differenceBy(parsedPosts, watchedState.data.loadedPosts, 'source');
           if (!(newPosts.length === 0)) {
             loadPosts(newPosts, feed.id);
@@ -119,24 +97,32 @@ export default async () => {
         })
         .catch((error) => {
           console.log(error.message, `Внутренний код ошибки: ${error.code}`);
-        });
-      return updateFeedPromise;
-    }));
+        })),
+    );
     feedsUpdatePromises.finally(() => setTimeout(() => updateFeeds(), 5000));
   }
+
   updateFeeds();
+
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     watchedState.loadingProcess = 'loading';
     const url = elements.urlInput.value;
-    validateUrl(url)
-      .then((validatedUrl) => fetchData(validatedUrl))
-      .then((fetchedData) => parseData(fetchedData))
-      .then(({ parsedFeedMeta, parsedPosts }) => {
-        const feedId = loadFeed(parsedFeedMeta, url);
+    const loadedFeedUrls = watchedState.data.loadedFeeds.map((feed) => feed.url);
+
+    validateUrl(url, loadedFeedUrls)
+      .then(async (validatedUrl) => {
+        const proxiedUrl = addProxy(validatedUrl);
+        const response = await axios.get(proxiedUrl);
+        const { parsedFeedMeta, parsedPosts } = parseData(response.data.contents);
+        const feedId = uniqueId('feed');
+        watchedState.data.loadedFeeds.push({
+          id: feedId,
+          url,
+          ...parsedFeedMeta,
+        });
         loadPosts(parsedPosts, feedId);
-      })
-      .then(() => {
+
         watchedState.loadingProcess = 'idle';
         watchedState.form.error = null;
         watchedState.form.valid = true;
@@ -144,17 +130,10 @@ export default async () => {
       .catch((error) => {
         watchedState.form.valid = false;
         watchedState.loadingProcess = 'failure';
-        if (!error.code) {
-          watchedState.form.error = 'undefinedError';
-        } else {
-          watchedState.form.error = error.code;
-        }
-        throw error;
-      })
-      .finally(() => {
-        elements.form.reset();
+        watchedState.form.error = typeError(error);
       });
   });
+
   elements.postsList.addEventListener('click', (e) => {
     const postId = e.target.closest('.post')?.getAttribute('data-post-id');
     if (e.target.getAttribute('clickable')) {

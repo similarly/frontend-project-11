@@ -97,17 +97,21 @@ function renderViewedPosts(state) {
   });
 }
 
-function renderSubmitButtonFeedback(state, elements) {
-  if (state.loadingProcess === 'loading') {
-    elements.submitButton.setAttribute('disabled', '');
-  } else {
-    elements.submitButton.removeAttribute('disabled');
-  }
-}
-
-function setFocus(state, elements) {
-  if (state.loadingProcess === 'failure') {
-    elements.urlInput.focus();
+function renderProcessFeedback(state, elements) {
+  switch (state.loadingProcess) {
+    case 'failure':
+      elements.urlInput.focus();
+      elements.submitButton.removeAttribute('disabled');
+      break;
+    case 'idle':
+      elements.form.reset();
+      elements.submitButton.removeAttribute('disabled');
+      break;
+    case 'loading':
+      elements.submitButton.setAttribute('disabled', '');
+      break;
+    default:
+      break;
   }
 }
 
@@ -131,8 +135,7 @@ function renderFeedback(state, elements, lang) {
 const getRenderFunction = (state, elements, lang) => (path) => {
   switch (path) {
     case 'loadingProcess':
-      renderSubmitButtonFeedback(state, elements);
-      setFocus(state, elements);
+      renderProcessFeedback(state, elements);
       break;
     case 'data.loadedFeeds':
       renderFeeds(state, elements);
