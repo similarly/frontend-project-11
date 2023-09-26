@@ -111,11 +111,11 @@ function renderProcessFeedback(state, elements) {
       elements.submitButton.setAttribute('disabled', '');
       break;
     default:
-      break;
+      throw new Error(`Unknown state proccess: ${state.loadingProcess}`);
   }
 }
 
-function renderFeedback(state, elements, lang) {
+function renderSubmitFeedback(state, elements, lang) {
   if (state.form.valid === true) {
     elements.urlInput.classList.remove('is-invalid');
     elements.urlInput.classList.add('is-valid');
@@ -151,7 +151,7 @@ const getRenderFunction = (state, elements, lang) => (path) => {
       break;
     case 'form.error':
     case 'form.valid':
-      renderFeedback(state, elements, lang);
+      renderSubmitFeedback(state, elements, lang);
       break;
     default:
       throw new Error(`Internal error. Wrong path: ${path}`);

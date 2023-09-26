@@ -106,14 +106,16 @@ export default async () => {
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
-    watchedState.loadingProcess = 'loading';
     const url = elements.urlInput.value;
     const loadedFeedUrls = watchedState.data.loadedFeeds.map((feed) => feed.url);
 
     validateUrl(url, loadedFeedUrls)
-      .then(async (validatedUrl) => {
+      .then((validatedUrl) => {
+        watchedState.loadingProcess = 'loading';
         const proxiedUrl = addProxy(validatedUrl);
-        const response = await axios.get(proxiedUrl);
+        return axios.get(proxiedUrl);
+      })
+      .then((response) => {
         const { parsedFeedMeta, parsedPosts } = parseData(response.data.contents);
         const feedId = uniqueId('feed');
         watchedState.data.loadedFeeds.push({
